@@ -40,6 +40,13 @@ jobs:
 
       - name: 🔧 Fix Expo versions
         run: |
+          # Remove expo-router plugin if not needed
+          if [ -f "app.json" ]; then
+            # Create a backup and remove expo-router plugin
+            cp app.json app.json.backup
+            # Remove expo-router plugin and experiments from app.json
+            npx json -I -f app.json -e "delete this.expo.plugins; delete this.expo.experiments" || true
+          fi
           npx expo install --fix
           npx expo-doctor || true
 
@@ -75,40 +82,50 @@ jobs:
             echo "Using ./dist directory"
             touch ./dist/.nojekyll
             echo "BUILD_DIR=./dist" >> $GITHUB_ENV
-            # Fix asset paths in index.html for GitHub Pages
-            if [ -f "./dist/index.html" ]; then
-              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./dist/index.html
-              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./dist/index.html
-              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./dist/index.html
-              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./dist/index.html
-            fi
+            BUILD_DIR="./dist"
           elif [ -d "./web-build" ]; then
             echo "Using ./web-build directory"  
             touch ./web-build/.nojekyll
             echo "BUILD_DIR=./web-build" >> $GITHUB_ENV
-            # Fix asset paths in index.html for GitHub Pages
-            if [ -f "./web-build/index.html" ]; then
-              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./web-build/index.html
-              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./web-build/index.html
-              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./web-build/index.html
-              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./web-build/index.html
-            fi
+            BUILD_DIR="./web-build"
           elif [ -d "./build" ]; then
             echo "Using ./build directory"
             touch ./build/.nojekyll  
             echo "BUILD_DIR=./build" >> $GITHUB_ENV
-            # Fix asset paths in index.html for GitHub Pages
-            if [ -f "./build/index.html" ]; then
-              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./build/index.html
-              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./build/index.html
-              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./build/index.html
-              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./build/index.html
-            fi
+            BUILD_DIR="./build"
           else
             echo "ERROR: No build directory found!"
             echo "Available directories:"
             ls -la
             exit 1
+          fi
+
+          # Fix asset paths in index.html for GitHub Pages
+          if [ -f "$BUILD_DIR/index.html" ]; then
+            echo "Fixing paths in index.html..."
+            sed -i 's|href="/|href="/React-Native-Education-App/|g' "$BUILD_DIR/index.html"
+            sed -i 's|src="/|src="/React-Native-Education-App/|g' "$BUILD_DIR/index.html"
+            sed -i 's|href="./|href="/React-Native-Education-App/|g' "$BUILD_DIR/index.html"
+            sed -i 's|src="./|src="/React-Native-Education-App/|g' "$BUILD_DIR/index.html"
+          fi
+
+          # Fix manifest.json paths if it exists
+          if [ -f "$BUILD_DIR/manifest.json" ]; then
+            echo "Fixing paths in manifest.json..."
+            sed -i 's|"start_url": "/|"start_url": "/React-Native-Education-App/|g' "$BUILD_DIR/manifest.json"
+            sed -i 's|"scope": "/|"scope": "/React-Native-Education-App/|g' "$BUILD_DIR/manifest.json"
+            sed -i 's|"src": "/|"src": "/React-Native-Education-App/|g' "$BUILD_DIR/manifest.json"
+          fi
+
+          # Create a simple fallback index.html for GitHub Pages SPA routing
+          if [ -f "$BUILD_DIR/index.html" ]; then
+            cp "$BUILD_DIR/index.html" "$BUILD_DIR/404.html"
+          fi
+
+          # Disable service worker for GitHub Pages (can cause caching issues)
+          if [ -f "$BUILD_DIR/service-worker.js" ]; then
+            echo "Disabling service worker..."
+            echo "// Service worker disabled for GitHub Pages" > "$BUILD_DIR/service-worker.js"
           fi
 
       - name: 🔍 Debug - Show fixed HTML
