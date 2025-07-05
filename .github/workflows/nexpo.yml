@@ -21,6 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        run: npm install react-native-web@~0.19.6 react-dom@18.2.0 @expo/webpack-config@^19.0.0 
 
       - name: Build Expo Web
         run: npx expo export:web
