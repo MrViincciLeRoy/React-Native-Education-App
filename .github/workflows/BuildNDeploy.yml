@@ -1,0 +1,44 @@
+name: Expo Web Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build and Deploy Expo Web App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🧼 Remove yarn.lock (npm only)
+        run: rm -f yarn.lock
+
+      - name: ⚙️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 📦 Install dependencies
+        run: |
+          npm install
+          npm install react-native-web@~0.19.6 react-dom@18.2.0 @expo/webpack-config@^19.0.0
+
+      - name: 🔧 Fix Expo versions
+        run: npx expo install --fix
+
+      - name: 🧪 Run expo-doctor
+        run: npx expo-doctor || true
+
+      - name: 🏗️ Build Web App
+        run: npx expo export:web
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
