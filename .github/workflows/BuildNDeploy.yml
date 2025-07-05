@@ -31,14 +31,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
       - name: 🔧 Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install dependencies and create lock file
         run: |
-          npm ci
+          npm install
           npm install react-native-web@~0.19.10 react-dom@18.2.0 @expo/webpack-config@^19.0.0
 
       - name: 🔧 Fix Expo versions and dependencies
