@@ -1,27 +1,38 @@
-name: Expo Web Build CI
+name: Expo Web CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
+    name: Build Expo Web App
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: 🛎️ Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: ⚙️ Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm install
-        run: npm install react-native-web@~0.19.6 react-dom@18.2.0 @expo/webpack-config@^19.0.0 
+      - name: 📦 Install dependencies (force web deps)
+        run: |
+          npm install
+          npm install react-native-web@~0.19.6 react-dom@18.2.0 @expo/webpack-config@^19.0.0
 
-      - name: Build Expo Web
+      - name: 🔧 Verify Expo setup
+        run: npx expo doctor
+
+      - name: 🏗️ Build Web App
         run: npx expo export:web
+
+      - name: 📁 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-web-build
+          path: dist/
