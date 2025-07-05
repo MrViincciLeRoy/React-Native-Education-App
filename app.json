@@ -27,13 +27,16 @@
       "favicon": "./assets/favicon.png",
       "bundler": "webpack",
       "output": "static",
-      "publicPath": "/React-Native-Education-App/"
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "experiments": {
-      "typedRoutes": true
+      "publicPath": "/React-Native-Education-App/",
+      "lang": "en",
+      "name": "React Native Education App",
+      "shortName": "Education App",
+      "backgroundColor": "#ffffff",
+      "themeColor": "#ffffff",
+      "orientation": "portrait",
+      "display": "browser",
+      "startUrl": "/React-Native-Education-App/",
+      "scope": "/React-Native-Education-App/"
     }
   }
 }
