@@ -47,37 +47,74 @@ jobs:
         run: npx expo export:web --clear
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+          EXPO_PUBLIC_URL: /React-Native-Education-App
 
-      - name: 🔍 Debug - Show all directories
+      - name: 🔍 Debug - Show build contents
         run: |
           echo "=== Current directory ==="
           ls -la
           echo "=== Looking for build outputs ==="
           find . -name "*.html" -o -name "index.html" 2>/dev/null || echo "No HTML files found"
-          echo "=== All directories ==="
-          find . -type d -maxdepth 2 2>/dev/null || echo "Error listing directories"
+          if [ -d "./dist" ]; then
+            echo "=== Contents of ./dist ==="
+            ls -la ./dist
+            echo "=== First few lines of index.html ==="
+            head -20 ./dist/index.html || echo "No index.html in dist"
+          fi
+          if [ -d "./web-build" ]; then
+            echo "=== Contents of ./web-build ==="
+            ls -la ./web-build
+            echo "=== First few lines of index.html ==="
+            head -20 ./web-build/index.html || echo "No index.html in web-build"
+          fi
 
-      - name: 📄 Create .nojekyll and upload
+      - name: 📄 Create .nojekyll and fix paths
         run: |
           # Check common build directories
           if [ -d "./dist" ]; then
             echo "Using ./dist directory"
             touch ./dist/.nojekyll
             echo "BUILD_DIR=./dist" >> $GITHUB_ENV
+            # Fix asset paths in index.html for GitHub Pages
+            if [ -f "./dist/index.html" ]; then
+              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./dist/index.html
+              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./dist/index.html
+              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./dist/index.html
+              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./dist/index.html
+            fi
           elif [ -d "./web-build" ]; then
             echo "Using ./web-build directory"  
             touch ./web-build/.nojekyll
             echo "BUILD_DIR=./web-build" >> $GITHUB_ENV
+            # Fix asset paths in index.html for GitHub Pages
+            if [ -f "./web-build/index.html" ]; then
+              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./web-build/index.html
+              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./web-build/index.html
+              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./web-build/index.html
+              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./web-build/index.html
+            fi
           elif [ -d "./build" ]; then
             echo "Using ./build directory"
             touch ./build/.nojekyll  
             echo "BUILD_DIR=./build" >> $GITHUB_ENV
+            # Fix asset paths in index.html for GitHub Pages
+            if [ -f "./build/index.html" ]; then
+              sed -i 's|href="/|href="/React-Native-Education-App/|g' ./build/index.html
+              sed -i 's|src="/|src="/React-Native-Education-App/|g' ./build/index.html
+              sed -i 's|href="./|href="/React-Native-Education-App/|g' ./build/index.html
+              sed -i 's|src="./|src="/React-Native-Education-App/|g' ./build/index.html
+            fi
           else
             echo "ERROR: No build directory found!"
             echo "Available directories:"
             ls -la
             exit 1
           fi
+
+      - name: 🔍 Debug - Show fixed HTML
+        run: |
+          echo "=== Modified index.html content ==="
+          head -20 ${{ env.BUILD_DIR }}/index.html || echo "No index.html found"
 
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
